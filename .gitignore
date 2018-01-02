@@ -1,0 +1,12 @@
+composer.phar
+.idea*
+*.massi*
+*.old*
+.~lock*
+phpunit.xml
+*.php~
+*.nogit*
+*.lnk
+phpunit
+cache/*
+.htaccess

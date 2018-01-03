@@ -3,8 +3,10 @@
 namespace Bayard\RollingLog\EventSubscriber;
 
 use Psr\Log\LoggerInterface;
-use Bayard\RollingLog\Serializer\ArrayzerInterface;
-use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
+//use Bayard\RollingLog\Serializer\ArrayzerInterface;
+//use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
+use JMS\Serializer\ArrayTransformerInterface;
+use JMS\Serializer\SerializerBuilder;
 
 abstract class AbstractLogSubscriber
 {
@@ -20,11 +22,11 @@ abstract class AbstractLogSubscriber
      */
     protected $serializer;
 
-    public function __construct(LoggerInterface $logger, ArrayzerInterface $serializer = null)
+    public function __construct(LoggerInterface $logger, ArrayTransformerInterface $serializer = null)
     {
         $this->logger = $logger;
         $this->serializer = (null === $serializer) ?
-            new DoctrineEntitySerializer() :
+            $serializer = SerializerBuilder::create()->build() :
             $serializer;
     }
 

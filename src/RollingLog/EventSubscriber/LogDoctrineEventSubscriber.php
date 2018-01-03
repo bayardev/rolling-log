@@ -2,6 +2,7 @@
 
 namespace Bayard\RollingLog\EventSubscriber;
 
+use Doctrine\ORM\Events;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\EntityManager;
@@ -10,10 +11,10 @@ use Bayard\RollingLog\Exception\BayardRollingLogException;
 class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventSubscriber
 {
     protected $eventsMessages = [
-        'preRemove' => "Preparing to Remove",
-        'postRemove' => "Removed",
-        'postPersist' => "Created",
-        'postUpdate' => "Updated"
+        Events::preRemove => "Preparing to Remove",
+        Events::postRemove => "Removed",
+        Events::postPersist => "Created",
+        Events::postUpdate => "Updated"
     ];
 
     public function getSubscribedEvents()

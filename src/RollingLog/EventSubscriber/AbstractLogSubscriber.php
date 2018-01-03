@@ -4,7 +4,7 @@ namespace Bayard\RollingLog\EventSubscriber;
 
 use Psr\Log\LoggerInterface;
 use Bayard\RollingLog\Serializer\ArrayzerInterface;
-use Bayard\RollingLog\Serializer\DefaultSerializer;
+use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
 
 abstract class AbstractLogSubscriber
 {
@@ -24,7 +24,7 @@ abstract class AbstractLogSubscriber
     {
         $this->logger = $logger;
         $this->serializer = (null === $serializer) ?
-            new DefaultSerializer() :
+            new DoctrineEntitySerializer() :
             $serializer;
     }
 

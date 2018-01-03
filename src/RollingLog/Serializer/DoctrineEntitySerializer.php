@@ -4,7 +4,7 @@ namespace Bayard\RollingLog\Serializer;
 
 use Bayard\RollingLog\Serializer\ArrayzerInterface;
 
-class DefaultSerializer implements ArrayzerInterface
+class DoctrineEntitySerializer implements ArrayzerInterface
 {
 
     /**
@@ -69,7 +69,7 @@ class DefaultSerializer implements ArrayzerInterface
      * @param array $blacklist List of entity=>array(parameters) to skip
      * @return NULL|Array
      */
-    private function arrayizor($anObject, $depth, $whitelist=array(), $blacklist=array())
+    protected function arrayizor($anObject, $depth, $whitelist=array(), $blacklist=array())
     {
         // Determine the next depth to use
         $nextDepth = $depth - 1;

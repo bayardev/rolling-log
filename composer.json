@@ -13,11 +13,12 @@
     "require": {
         "php": ">=5.6",
         "psr/log-implementation": "~1.0",
-        "psr/event-manager-implementation": "^1.0"
+        "psr/event-manager-implementation": "^1.0",
     },
     "require-dev": {
         "phpunit/phpunit": "~5.4",
-        "doctrine/orm": "^2.5"
+        "doctrine/orm": "^2.5",
+        "symfony/http-kernel":"^3.4"
     },
     "autoload": {
         "psr-4": {"Bayard\\RollingLog\\": "src/RollingLog"}

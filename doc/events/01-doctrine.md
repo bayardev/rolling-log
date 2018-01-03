@@ -1,5 +1,8 @@
 # Log on Doctrine Events
 
+- [Usage Requirements](#usage-requirements)
+- [Enabling Doctrine Logger](#enabling-doctrine-logger)
+
 ## Usage Requirements
 
 You need Doctrine as a dependency of your project, so your composer.json file should look like this :
@@ -13,6 +16,9 @@ You need Doctrine as a dependency of your project, so your composer.json file sh
 ```
 
 ## Enabling Doctrine Logger
+
+- [generic PHP](#generic-php)
+- [Symfony framework](#symfony-framework)
 
 ### generic PHP
 

@@ -9,7 +9,6 @@
             "email": "massimiliano.pasquesi@bayard-presse.com"
         }
     ],
-    "minimum-stability": "dev",
     "require": {
         "php": ">=5.6",
         "psr/log-implementation": "~1.0",
@@ -26,5 +25,11 @@
     },
     "autoload-dev": {
         "psr-4": {"Bayard\\RollingLog\\Tests": "tests/RollingLog"}
+    },
+    "minimum-stability": "dev",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.x-dev"
+        }
     }
 }

@@ -2,7 +2,9 @@ composer.phar
 phpunit.xml
 phpunit
 cache/*
+/vendor/
 .htaccess
+composer.lock
 *.nogit*
 .idea*
 *.old*

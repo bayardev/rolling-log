@@ -30,6 +30,11 @@ abstract class AbstractLogSubscriber
             $serializer;
     }
 
+    public function setSerializer(ArrayTransformerInterface $serializer)
+    {
+        $this->serializer = $serializer;
+    }
+
     protected function logEvent($message, array $context = array(), $level = self::DEFAULT_LOGLEVEL)
     {
         $this->logger->log($level, $message, $context);
@@ -60,8 +65,8 @@ abstract class AbstractLogSubscriber
             case $method_like_name = $this->methodLikeGetNameExists($object):
                 $result = $object->$method_like_name();
                 break;
-            case method_exists($object, 'getId'):
-                $result = $object->getId();
+            case method_exists($object, 'getSlug'):
+                $result = $object->getSlug();
                 break;
             case method_exists($object, 'getId'):
                 $result = $object->getId();

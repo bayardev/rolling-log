@@ -14,5 +14,5 @@ interface ArrayzerInterface
      * @return NULL|Array
      *
      */
-    public function toArray($object, $depth = 1,$whitelist=array(), $blacklist=array());
+    public function toArray($object, $depth = 1, $whitelist=array(), $blacklist=array());
 }

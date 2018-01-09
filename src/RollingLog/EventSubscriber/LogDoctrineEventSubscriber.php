@@ -7,6 +7,7 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\EntityManager;
 use Bayard\RollingLog\Exception\BayardRollingLogException;
+//use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
 
 class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventSubscriber
 {
@@ -26,6 +27,13 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
     {
         return $args;
     }
+
+    // public function setSerializer(ArrayTransformerInterface $serializer)
+    // {
+    //     $this->serializer = (null === $serializer) ?
+    //         $serializer = new DoctrineEntitySerializer() :
+    //         $serializer;
+    // }
 
     public function __call($name, $args)
     {

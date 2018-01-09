@@ -8,20 +8,6 @@ class DoctrineEntitySerializer implements ArrayzerInterface
 {
 
     /**
-     * Converts the Doctrine Entity into a JSON Representation
-     *
-     * @param object $object The Object (Typically a Doctrine Entity) to convert to an array
-     * @param integer $depth The Depth of the object graph to pursue
-     * @param array $whitelist List of entity=>array(parameters) to convert
-     * @param array $blacklist List of entity=>array(parameters) to skip
-     * @return string
-     */
-    public function json_encode($object, $depth=1, $whitelist=array(), $blacklist=array())
-    {
-        return json_encode($this->toArray($object, $depth, $whitelist, $blacklist));
-    }
-
-    /**
      * Serializes our Doctrine Entities
      *
      * This is the primary entry point, because it assists with handling collections

@@ -9,8 +9,11 @@ use Doctrine\ORM\EntityManager;
 use Bayard\RollingLog\Exception\BayardRollingLogException;
 use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
 
-class LogDoctrineEventSubscriber extends DoctrineEntitySerializer implements EventSubscriber
+class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventSubscriber
 {
+
+    use DoctrineEntitySerializer;
+
     protected $eventsMessages = [
         Events::preRemove => "Preparing to Remove",
         Events::postRemove => "Removed",
@@ -87,20 +90,7 @@ class LogDoctrineEventSubscriber extends DoctrineEntitySerializer implements Eve
 
     public function getContextForPostPersist(EntityManager $entityManager, $entity)
     {
-        $change_set = $entityManager->getUnitOfWork()->getEntityChangeSet($entity);
-        $insert_values = [];
-
-        foreach ($change_set as $attr => $values) {
-            foreach ($values as $i => $value) {
-                if (is_object($value)) {
-                    $insert_values[$attr] = $this->objectAsName($value);
-                } else {
-                    $insert_values[$attr] = $value;
-                }
-            }
-        }
-
-        return $insert_values;
+        return $this->toArray($entityManager, $entity);
     }
 
     public function getContextForPostUpdate(EntityManager $entityManager, $entity)

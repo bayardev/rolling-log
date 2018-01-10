@@ -7,9 +7,9 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\EntityManager;
 use Bayard\RollingLog\Exception\BayardRollingLogException;
-//use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
+use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
 
-class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventSubscriber
+class LogDoctrineEventSubscriber extends DoctrineEntitySerializer implements EventSubscriber
 {
     protected $eventsMessages = [
         Events::preRemove => "Preparing to Remove",

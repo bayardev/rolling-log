@@ -15,4 +15,6 @@ interface ArrayzerInterface
      *
      */
     public function toArray($object, $depth = 1, $whitelist=array(), $blacklist=array());
+
+    public function objectAsName($object);
 }

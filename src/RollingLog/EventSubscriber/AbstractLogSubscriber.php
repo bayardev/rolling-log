@@ -52,46 +52,4 @@ abstract class AbstractLogSubscriber
     {
         return $this->serializer->toArray($object);
     }
-
-    protected function objectAsName($object)
-    {
-        switch (true) {
-            case method_exists($object, '__toString'):
-                $result = $object->__toString();
-                break;
-            case method_exists($object, 'getName'):
-                $result = $object->getName();
-                break;
-            case $method_like_name = $this->methodLikeGetNameExists($object):
-                $result = $object->$method_like_name();
-                break;
-            case method_exists($object, 'getSlug'):
-                $result = $object->getSlug();
-                break;
-            case method_exists($object, 'getId'):
-                $result = $object->getId();
-                break;
-            case ($object instanceof \DateTime):
-                $result = $object->format(\DateTime::ATOM);
-                break;
-            default:
-                $result = $this->serializeObject($object);
-                //$result = get_class($object);
-                break;
-        }
-
-        return $result;
-    }
-
-    protected function methodLikeGetNameExists($object)
-    {
-        $class_methods = get_class_methods($object);
-        foreach ($class_methods as $method_name) {
-            if (strpos($method_name, 'Name') !== false) {
-                return $method_name;
-            }
-        }
-
-        return false;
-    }
 }

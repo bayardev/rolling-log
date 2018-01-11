@@ -48,12 +48,14 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
         $entity = $eargs->getObject();
         $entityName = $this->getSimpleClassName(get_class($entity));
         $entityManager = $eargs->getObjectManager();
+        $entityManager->getUnitOfWork()->initializeObject($entity);
 
         try {
             $entityId = $entity->getId();
         } catch (Exception $e) {
             $entityId = null;
         }
+
 
         $context = call_user_func_array([$this, 'getContextFor'.ucfirst($name)], [$entityManager, $entity]);
 
@@ -67,8 +69,8 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
     public function getContextForPreRemove(EntityManager $entityManager, $entity)
     {
         $original_data = $entityManager->getUnitOfWork()->getOriginalEntityData($entity);
-        $removing_values = [];
 
+        $removing_values = [];
         foreach ($original_data as $attr => $value) {
             if (is_object($value)) {
                 $removing_values[$attr] = $this->objectAsName($value);
@@ -82,9 +84,7 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
 
     public function getContextForPostRemove(EntityManager $entityManager, $entity)
     {
-        $context = $this->serializeObject($entity);
-
-        return $context;
+        return $this->toArray($entityManager, $entity);
 
     }
 

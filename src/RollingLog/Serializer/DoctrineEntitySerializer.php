@@ -5,6 +5,7 @@ namespace Bayard\RollingLog\Serializer;
 use Bayard\RollingLog\Serializer\ArrayzerInterface;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\PersistentCollection;
 
 trait DoctrineEntitySerializer
 {
@@ -31,21 +32,32 @@ trait DoctrineEntitySerializer
 
         $anArray = array();
 
-        $change_set = $entityManager->getUnitOfWork()->getEntityChangeSet($object);
-
-        foreach ($change_set as $attr => $values) {
-            foreach ($values as $i => $value) {
-                if (is_object($value)) {
-                    if($depth > 1)
-                        $anArray[$attr] = $this->toArray($entityManager, $value, $depth-1, $whitelist, $blacklist);
+        foreach(get_class_methods($object) as $method)
+        {
+            if(strncmp($method, "get", 3) == 0)
+            {
+                if(($value = $object->$method()) !== null)
+                {
+                    // var_dump($value);
+                    $attr = lcfirst(substr($method, 3));
+                    if (is_object($value)) {
+                        if($depth > 1){
+                            $anArray[$attr] = $this->toArray($entityManager, $value, $depth-1, $whitelist, $blacklist);
+                            echo "depth > 1 ".$attr." <br>";
+                        }
+                        else{
+                            $anArray[$attr] = $this->objectAsName($value);
+                            echo "depth <= 1 ".$attr." <br>";
+                        }
+                    }
                     else
-                        $anArray[$attr] = $this->objectAsName($value);
-                } else {
-                    $anArray[$attr] = $value;
+                    {
+                        $anArray[$attr] = $value;
+                    }
                 }
             }
         }
-
+        // exit();
         if(empty($whitelist))
            if (empty($blacklist))
                 return $anArray;
@@ -127,7 +139,11 @@ trait DoctrineEntitySerializer
             case ($object instanceof \DateTime):
                 $result = $object->format(\DateTime::ATOM);
                 break;
+            case ($object instanceof PersistentCollection):
+                return "PersistentCollection";
+                break;
             default:
+                // var_dump(get_class($object));
                 $result = $this->serializeObject($object);
                 //$result = get_class($object);
                 break;
@@ -148,11 +164,16 @@ trait DoctrineEntitySerializer
         foreach ($class_methods as $method_name)
             if(strncmp($method_name, "get", 3) == 0)
                 if (strpos($method_name, 'Name') !== false || strpos($method_name, 'name') !== false)
-                    array_push($tab_method, $method_name);
+                    $tab_method[] = $method_name;
 
         //voir les username/firstName/appName/fileName
         if(count($tab_method) !== 0)
-            return in_array('getName', tab_method) ? "getName" : $tab_method[0];
+        {
+            if(in_array('getName', $tab_method))
+                return "getName";
+            else
+                return $tab_method[0];
+        }
         return false;
     }
 

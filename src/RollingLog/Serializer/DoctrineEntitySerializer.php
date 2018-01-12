@@ -35,13 +35,11 @@ trait DoctrineEntitySerializer
 
         foreach(get_class_methods($object) as $method)
         {
-            var_dump(get_class($object));
             if(strncmp($method, "get", 3) == 0)
             {
                 $value = $object->$method();
                 if($value !== null)
                 {
-                    // var_dump($value);
                     $attr = lcfirst(substr($method, 3));
                     if(is_object($value)) 
                     {

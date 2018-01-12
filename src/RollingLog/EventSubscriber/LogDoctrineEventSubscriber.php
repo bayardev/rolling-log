@@ -11,7 +11,6 @@ use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
 
 class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventSubscriber
 {
-
     use DoctrineEntitySerializer;
 
     protected $eventsMessages = [
@@ -84,13 +83,13 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
 
     public function getContextForPostRemove(EntityManager $entityManager, $entity)
     {
-        return $this->toArray($entityManager, $entity);
+        return $this->toArray($entity);
 
     }
 
     public function getContextForPostPersist(EntityManager $entityManager, $entity)
     {
-        return $this->toArray($entityManager, $entity);
+        return $this->toArray($entity);
     }
 
     public function getContextForPostUpdate(EntityManager $entityManager, $entity)

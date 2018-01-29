@@ -88,9 +88,9 @@ trait DoctrineEntitySerializer
     }
 
     /**
-     * [getSimpleClassName description]
-     * @param  [type] $classname [description]
-     * @return [type]            [description]
+     * recovers a simple class name in doctrine class name
+     * @param  String $classname doctrine class name
+     * @return String            Simple class name
      */
     protected function getSimpleClassName($classname)
     {
@@ -101,10 +101,10 @@ trait DoctrineEntitySerializer
     }
 
     /**
-     * [blackListing description]
-     * @param  [type] $blacklist [description]
-     * @param  [type] $array     [description]
-     * @return [type]            [description]
+     * function take of blacklist elements of the array
+     * @param  Array $blacklist  elements to take of
+     * @param  Array $array      traeted array
+     * @return Array             Array whithout blacklist 
      */
     protected function blackListing($blacklist, $array)
     {
@@ -117,10 +117,10 @@ trait DoctrineEntitySerializer
     }
 
     /**
-     * [whiteListing description]
-     * @param  [type] $whitelist [description]
-     * @param  [type] $array     [description]
-     * @return [type]            [description]
+     * function take of the element are not in the array
+     * @param  Array $whitelist  elements to keep
+     * @param  Array $array      traeted array
+     * @return Array             Array with only whitelist
      */
     protected function whiteListing($whitelist, $array)
     {
@@ -133,9 +133,9 @@ trait DoctrineEntitySerializer
     }
 
     /**
-     * [objectAsName description]
-     * @param  [type] $object [description]
-     * @return [type]         [description]
+     * Function research a first information of object with one his exist method, else serialize object
+     * @param  Object $object       Object where search method
+     * @return String|Array         First information or serialize object
      */
     public function objectAsName($object)
     {
@@ -176,9 +176,9 @@ trait DoctrineEntitySerializer
 
 
     /**
-     * [methodLikeGetNameExists description]
-     * @param  [type] $object [description]
-     * @return [type]         [description]
+     * Function research method to return a name of class
+     * @param  Object $object       Object where search method name
+     * @return String|false         method to return a name of class or false
      */
     protected function methodLikeGetNameExists($object)
     {
@@ -210,6 +210,12 @@ trait DoctrineEntitySerializer
         return false;
     }
 
+
+    /**
+     * [persistentCollectionToArrayAsId description]
+     * @param  PersistentCollection $object [description]
+     * @return [type]                       [description]
+     */
     protected function persistentCollectionToArrayAsId(PersistentCollection $object)
     {
         $tmp = array();

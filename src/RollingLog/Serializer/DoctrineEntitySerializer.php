@@ -6,6 +6,7 @@ use Bayard\RollingLog\Serializer\ArrayzerInterface;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\PersistentCollection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 trait DoctrineEntitySerializer
@@ -33,6 +34,9 @@ trait DoctrineEntitySerializer
 
         $anArray = array();
 
+        var_dump($object);
+        if($object instanceof PersistentCollection)
+            exit(var_dump(get_class_methods($object)));
         foreach(get_class_methods($object) as $method)
         {
             if(strncmp($method, "get", 3) == 0)
@@ -47,7 +51,7 @@ trait DoctrineEntitySerializer
                         {
                             switch (true) 
                             {
-                                case ($value instanceof PersistentCollection):
+                                case ($value instanceof ArrayCollection):
                                     foreach ($value->getValues() as $tmpValue) 
                                     {
                                         $anArray[$attr][] = $this->toArray($tmpValue, $depth-1, $whitelist, $blacklist);
@@ -146,7 +150,7 @@ trait DoctrineEntitySerializer
             case method_exists($object, 'getId'):
                 $result = $object->getId();
                 break;
-            case ($object instanceof PersistentCollection):
+            case ($object instanceof ArrayCollection):
                 $result = $this->persistentCollectionToArrayAsId($object);
                 break;
             case $method_like_name = $this->methodLikeGetNameExists($object):
@@ -216,7 +220,7 @@ trait DoctrineEntitySerializer
      * @param  PersistentCollection $object [description]
      * @return [type]                       [description]
      */
-    protected function persistentCollectionToArrayAsId(PersistentCollection $object)
+    protected function persistentCollectionToArrayAsId($object)
     {
         $tmp = array();
         foreach ($object->getValues() as $object) {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Bayard\RollingLog\Tests\Serializer;
+namespace Bayard\RollingLog\Tests\Serializer\Doctrine\Entities;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -8,29 +8,28 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Family
  *
- * @ORM\Table(name="person")
+ * @Entity @Table(name="family")
  */
 class Family
 {   
     /**
      * @var int
      *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @Column(name="id", type="integer")
+     * @Id
+     * @GeneratedValue(strategy="AUTO")
      */
     private $id;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="name", type="string", length=255)
+     * @Column(name="name", type="string", length=255)
      */
     private $name;
 
     /**
-    * @ORM\OneToMany(targetEntity="Person")
-    * @ORM\JoinColumn(nullable=true)
+    * @OneToMany(targetEntity="Person", cascade={"persist", "remove"}, mappedBy="family")
     */
     private $persons;
 

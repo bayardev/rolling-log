@@ -1,45 +1,56 @@
 <?php
 
-namespace Bayard\RollingLog\Tests\Serializer;
+namespace Bayard\RollingLog\Tests\Serializer\Doctrine\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Person
  *
- * @ORM\Table(name="person")
+ * @Entity @Table(name="person")
  */
 class Person
 {	
 	/**
      * @var int
      *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @Column(name="id", type="integer")
+     * @Id
+     * @GeneratedValue(strategy="AUTO")
      */
 	private $id;
 
 	/**
      * @var string
      *
-     * @ORM\Column(name="firstName", type="string", length=255)
+     * @Column(name="firstName", type="string", length=255, unique=true)
      */
 	private $firstName;
 
 	/**
      * @var int
      *
-     * @ORM\Column(name="age", type="integer")
+     * @Column(name="age", type="integer")
      */
 	private $age;
 
 	/**
      * @var int
      *
-     * @ORM\Column(name="size", type="integer")
+     * @Column(name="size", type="integer")
      */
 	private $size;
+
+    /**
+    * @ManyToOne(targetEntity="Family", inversedBy="persons")
+    */
+    private $family;
+
+    /**
+    * @OneToOne(targetEntity="Address")
+    * @JoinColumn(name="address_id", referencedColumnName="id")
+    */
+    private $address;
 
     /**
      * Get id.
@@ -121,5 +132,29 @@ class Person
     public function getSize()
     {
         return $this->size;
+    }
+
+    /**
+     * Set address.
+     *
+     * @param \BayardTest\PlatformBundle\Entity\Image $address
+     *
+     * @return Person
+     */
+    public function setAddress(Address $address)
+    {
+        $this->address = $address;
+
+        return $this;
+    }
+
+    /**
+     * Get address.
+     *
+     * @return \BayardTest\PlatformBundle\Entity\Image
+     */
+    public function getAddress()
+    {
+        return $this->address;
     }
 }

@@ -6,6 +6,7 @@ use Bayard\RollingLog\Serializer\ArrayzerInterface;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\PersistentCollection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 trait DoctrineEntitySerializer
@@ -33,21 +34,43 @@ trait DoctrineEntitySerializer
 
         $anArray = array();
 
+        //var_dump($object);
+        if($object instanceof PersistentCollection){
+            $object = $object->unwrap();
+            //exit(var_dump($object));
+            /*if($depth > 1){
+                foreach ($value->getValues() as $tmpValue) 
+                {
+                    $anArray[$attr][] = $this->toArray($tmpValue, $depth-1, $whitelist, $blacklist);
+                }
+            } else {
+                $anArray[$attr] = $this->objectAsName($value);
+                echo "depth <= 1 ".$attr. " : ". $anArray[$attr] ." <br>";
+            }*/
+        }
         foreach(get_class_methods($object) as $method)
         {
-            if(strncmp($method, "get", 3) == 0)
+            if(strncmp($method, "get", 3) == 0 && strlen($method) > 3)
             {
                 $value = $object->$method();
                 if($value !== null)
                 {
                     $attr = lcfirst(substr($method, 3));
-                    if(is_object($value)) 
+
+                    if($object instanceof ArrayCollection){
+                        if($depth <= 1){
+                            $anArray["id"] = $this->persistentCollectionToArrayAsId($object);
+                            echo "depth <= 1 ".$attr. " : <br>";
+                            var_dump($anArray["id"]);
+                        }
+                    } 
+                    else if(is_object($value)) 
                     {
                         if($depth > 1)
                         {
                             switch (true) 
                             {
-                                case ($value instanceof PersistentCollection):
+                                case ($value instanceof ArrayCollection):
                                     foreach ($value->getValues() as $tmpValue) 
                                     {
                                         $anArray[$attr][] = $this->toArray($tmpValue, $depth-1, $whitelist, $blacklist);
@@ -62,9 +85,11 @@ trait DoctrineEntitySerializer
                                     $anArray[$attr] = $this->toArray($value, $depth-1, $whitelist, $blacklist);
                                     break;
                             }
-                        }
-                        else{
+                            echo "depth > 1 ".$attr." <br>";
+                        } else {
                             $anArray[$attr] = $this->objectAsName($value);
+                            echo "depth <= 1 ".$attr. " : <br>";
+                            var_dump($anArray[$attr]);
                         }
                     }
                     else
@@ -144,9 +169,9 @@ trait DoctrineEntitySerializer
             case method_exists($object, 'getId'):
                 $result = $object->getId();
                 break;
-            case ($object instanceof PersistentCollection):
+            /*case ($object instanceof ArrayCollection):
                 $result = $this->persistentCollectionToArrayAsId($object);
-                break;
+                break;*/
             case $method_like_name = $this->methodLikeGetNameExists($object):
                 $result = $object->$method_like_name();
                 break;
@@ -214,12 +239,12 @@ trait DoctrineEntitySerializer
      * @param  PersistentCollection $object [description]
      * @return [type]                       [description]
      */
-    protected function persistentCollectionToArrayAsId(PersistentCollection $object)
+    protected function persistentCollectionToArrayAsId($object)
     {
         $tmp = array();
         foreach ($object->getValues() as $object) {
             if(method_exists($object, "getId"))
-                $tmp["id"][] = $object->getId();
+                $tmp[] = $object->getId();
             else
                 $tmp[] = $this->objectAsName($value);
         }

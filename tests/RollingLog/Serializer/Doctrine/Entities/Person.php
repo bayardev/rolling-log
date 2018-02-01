@@ -48,7 +48,7 @@ class Person
 
     /**
     * @OneToOne(targetEntity="Address")
-    * @JoinColumn(name="address_id", referencedColumnName="id")
+    * @JoinColumn(name="address_id", referencedColumnName="id", nullable=true)
     */
     private $address;
 
@@ -141,7 +141,7 @@ class Person
      *
      * @return Person
      */
-    public function setAddress(Address $address)
+    public function setAddress(Address $address = null)
     {
         $this->address = $address;
 

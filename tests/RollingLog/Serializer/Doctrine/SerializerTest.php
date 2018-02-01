@@ -18,6 +18,20 @@ class SerializerTest extends TestCase
 {
 	use DoctrineEntitySerializer;
 
+	protected $addressData = array(
+		array("Aurice", "Route de campagne", 70), 
+		array("Saint Server", "Route de Aurice", 42), 
+		array("Cauna", "Route de Lourdes", 84),
+	);
+
+	protected $personData = array(
+		array("Remi", 22, 180, null), 
+		array("Damien", 19, 185, null)
+	);
+
+	protected $familyData =  array(
+		array('Colet', null)
+	);
 
 	/**
 	 * testSimpleEntity => Ce premier test premier de voir si la sérialization ce passe correctement avec une entité doctrine simple.
@@ -29,9 +43,15 @@ class SerializerTest extends TestCase
 
 		//Création de notre Entité simple (ici pour l'exemple nous créons une adresse)
 		$address = new Address();
-		$address->setTown("Aurice");
-		$address->setStreet("Route de campagne");
-		$address->setNumber(70);
+		$addressMethod = array();
+
+		$i = 0;
+		foreach(get_class_methods($address) as $method) {
+			if(strncmp($method, "set", 3) == 0){
+				$addressMethod[] = substr($method, 3);
+				$address->$method($this->addressData[0][$i++]);
+			}
+		}
 
 		//Nous hydraton l'entité en l'enregistront en base de donnée
 		$entityManager->persist($address);
@@ -43,7 +63,7 @@ class SerializerTest extends TestCase
 		//dans le même environnement d'une utilisation normal du
 		//sérializer de RollingLog
 		$addressRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$addressRequest = $addressRepository->findOneBy(["town" => "Aurice"]);
+		$addressRequest = $addressRepository->findOneBy([lcfirst($addressMethod[0]) => $this->addressData[0][0]]);
 		$serializer = $this->toArray($addressRequest);
 
 		//Nous faisons enfin les vérification. Pour ce faire nous
@@ -54,9 +74,23 @@ class SerializerTest extends TestCase
 		//la vrai magnière dont serais conditionné la ville d'une
 		//adresse, mais cela est fais juste pour l'exemple et
 		//nous permet de faire correctement les tests.
-		$this->assertEquals($serializer['town'], $address->getTown());
-		$this->assertEquals($serializer['street'], $address->getStreet());
-		$this->assertEquals($serializer['number'], $address->getNumber());
+		$i = 0;
+		foreach ($serializer as $key => $value) {
+
+			if(strcmp($key, "id") == 0) {
+				//Verification qu'il il y a bien l'ID
+				$this->assertEquals($key, "id");
+
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $addressRequest->getId());
+			} else {
+				//Verification des clé dans le sérializer
+				$this->assertEquals($key, lcfirst($addressMethod[$i]));
+
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $address->{"get".$addressMethod[$i++]}());
+			}
+		}
 
 		//Nous vidons ensuite la table "Address" contenu dans la 
 		//base de données pour le bon focntionnement des autres
@@ -68,7 +102,6 @@ class SerializerTest extends TestCase
 		try {
 		    $connection->query('SET FOREIGN_KEY_CHECKS=0');
 		    $connection->query('DELETE FROM '.$cmd->getTableName());
-
 		    $connection->query('SET FOREIGN_KEY_CHECKS=1');
 		    $connection->commit();
 		} catch (\Exception $e) {
@@ -80,41 +113,59 @@ class SerializerTest extends TestCase
 	{
 		require("bootstrap.php");
 
+		//Création de notre Entité simple (ici pour l'exemple nous créons une adresse)
 		$address = new Address();
-		$address->setTown("Saint Server");
-		$address->setStreet("Route de Aurice");
-		$address->setNumber(42);
-
 		$person = new Person();
-		$person->setFirstName("Remi");
-		$person->setAge(22);
-		$person->setSize(180);
+
+		$personMethod = array();
+
+		$i = 0;
+		foreach(get_class_methods($address) as $method)
+			if(strncmp($method, "set", 3) == 0)
+				$address->$method($this->addressData[1][$i++]);
+
+		$i = 0;
+		foreach(get_class_methods($person) as $method) {
+			if(strncmp($method, "set", 3) == 0){
+				$personMethod[] = substr($method, 3);
+				$person->$method($this->personData[0][$i++]);
+			}
+		}
+
 		$person->setAddress($address);
 
+		//Nous hydraton l'entité en l'enregistront en base de donnée
 		$entityManager->persist($address);
 		$entityManager->persist($person);
 		$entityManager->flush();
 
-
-		$addressRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$addressRequest = $addressRepository->findOneBy(["town" => "Saint Server"]);
-		$serializerAddress = $this->toArray($addressRequest);
-
 		$personRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
-		$personRequest = $personRepository->findOneBy(["firstName" => "Remi"]);
+		$personRequest = $personRepository->findOneBy([lcfirst($personMethod[0]) => $this->personData[0][0]]);
 		$serializerPerson = $this->toArray($personRequest);
 
-		$this->assertEquals($serializerAddress['town'], $address->getTown());
-		$this->assertEquals($serializerAddress['street'], $address->getStreet());
-		$this->assertEquals($serializerAddress['number'], $address->getNumber());
+		$i = 0;
+		foreach ($serializerPerson as $key => $value) {
 
-		$this->assertEquals($serializerPerson['firstName'], $person->getFirstName());
-		$this->assertEquals($serializerPerson['age'], $person->getAge());
-		$this->assertEquals($serializerPerson['size'], $person->getSize());
+			if(strcmp($key, "id") == 0) {
+				//Verification qu'il il y a bien l'ID
+				$this->assertEquals($key, "id");
 
-		$addressInPersonRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$addressInPersonRequest = $addressInPersonRepository->findOneBy(["id" => $serializerPerson['address']]);
-		$this->assertEquals($addressInPersonRequest->getTown(), $address->getTown());
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $personRequest->getId());
+			} else if(strcmp($key, "address") == 0){
+				//Verification des clé dans le sérializer
+				$this->assertEquals($key, lcfirst($personMethod[$i]));
+
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $person->{"get".$personMethod[$i++]}()->getId());
+			} else {
+				//Verification des clé dans le sérializer
+				$this->assertEquals($key, lcfirst($personMethod[$i]));
+
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $person->{"get".$personMethod[$i++]}());
+			}
+		}
 
 		$cmd = $entityManager->getClassMetadata('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
 		$connection = $entityManager->getConnection();
@@ -123,7 +174,6 @@ class SerializerTest extends TestCase
 		try {
 		    $connection->query('SET FOREIGN_KEY_CHECKS=0');
 		    $connection->query('DELETE FROM '.$cmd->getTableName());
-
 		    $connection->query('SET FOREIGN_KEY_CHECKS=1');
 		    $connection->commit();
 		} catch (\Exception $e) {
@@ -137,7 +187,6 @@ class SerializerTest extends TestCase
 		try {
 		    $connection->query('SET FOREIGN_KEY_CHECKS=0');
 		    $connection->query('DELETE FROM '.$cmd->getTableName());
-
 		    $connection->query('SET FOREIGN_KEY_CHECKS=1');
 		    $connection->commit();
 		} catch (\Exception $e) {
@@ -150,44 +199,77 @@ class SerializerTest extends TestCase
 	{
 		require("bootstrap.php");
 
+		//Création de notre Entité simple (ici pour l'exemple nous créons une adresse)
 		$address = new Address();
-		$address->setTown("Cauna");
-		$address->setStreet("Route de Lourdes");
-		$address->setNumber(84);
-
 		$person = new Person();
-		$person->setFirstName("Damien");
-		$person->setAge(19);
-		$person->setSize(185);
+
+		$personMethod = array();
+
+		$i = 0;
+		foreach(get_class_methods($address) as $method) {
+			if(strncmp($method, "set", 3) == 0){
+				$addressMethod[] = substr($method, 3);
+				$address->$method($this->addressData[2][$i++]);
+			}
+		}
+
+		$i = 0;
+		foreach(get_class_methods($person) as $method) {
+			if(strncmp($method, "set", 3) == 0){
+				$personMethod[] = substr($method, 3);
+				$person->$method($this->personData[1][$i++]);
+			}
+		}
+
 		$person->setAddress($address);
 
+		//Nous hydraton l'entité en l'enregistront en base de donnée
 		$entityManager->persist($address);
 		$entityManager->persist($person);
 		$entityManager->flush();
 
-
-		$addressRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$addressRequest = $addressRepository->findOneBy(["town" => "Cauna"]);
-		$serializerAddress = $this->toArray($addressRequest);
-
 		$personRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
-		$personRequest = $personRepository->findOneBy(["firstName" => "Damien"]);
+		$personRequest = $personRepository->findOneBy([lcfirst($personMethod[0]) => $this->personData[1][0]]);
 		$serializerPerson = $this->toArray($personRequest, 2);
 
-		$this->assertEquals($serializerAddress['town'], $address->getTown());
-		$this->assertEquals($serializerAddress['street'], $address->getStreet());
-		$this->assertEquals($serializerAddress['number'], $address->getNumber());
+		$i = 0;
+		foreach ($serializerPerson as $key => $value) {
 
-		$this->assertEquals($serializerPerson['firstName'], $person->getFirstName());
-		$this->assertEquals($serializerPerson['age'], $person->getAge());
-		$this->assertEquals($serializerPerson['size'], $person->getSize());
-		$this->assertEquals($serializerPerson['address']['town'], $address->getTown());
-		$this->assertEquals($serializerPerson['address']['street'], $address->getStreet());
-		$this->assertEquals($serializerPerson['address']['number'], $address->getNumber());
+			if(strcmp($key, "id") == 0) {
+				//Verification qu'il il y a bien l'ID
+				$this->assertEquals($key, "id");
 
-		$addressInPersonRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$addressInPersonRequest = $addressInPersonRepository->findOneBy(["id" => $serializerPerson['address']['id']]);
-		$this->assertEquals($addressInPersonRequest->getTown(), $address->getTown());
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $personRequest->getId());
+			} else if(strcmp($key, "address") == 0){
+				//Verification des clé dans le sérializer
+				$this->assertEquals($key, lcfirst($personMethod[$i]));
+
+				$j = 0;
+				foreach ($value as $key2 => $value2) {
+
+					if(strcmp($key2, "id") == 0) {
+						//Verification qu'il il y a bien l'ID
+						$this->assertEquals($key2, "id");
+
+						//Verification de la donnée dans le sérializer à clé $key2
+						$this->assertEquals($value2, $personRequest->getAddress()->getId());
+					} else {
+						//Verification des clé dans le sérializer
+						$this->assertEquals($key2, lcfirst($addressMethod[$j]));
+
+						//Verification de la donnée dans le sérializer à clé $key2
+						$this->assertEquals($value2, $address->{"get".$addressMethod[$j++]}());
+					}
+				}
+			} else {
+				//Verification des clé dans le sérializer
+				$this->assertEquals($key, lcfirst($personMethod[$i]));
+
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $person->{"get".$personMethod[$i++]}());
+			}
+		}
 
 		$cmd = $entityManager->getClassMetadata('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
 		$connection = $entityManager->getConnection();
@@ -222,30 +304,42 @@ class SerializerTest extends TestCase
 	{
 		require("bootstrap.php");
 
+		//Création de notre Entité simple (ici pour l'exemple nous créons une adresse)
 		$address1 = new Address();
-		$address1->setTown("Saint Server");
-		$address1->setStreet("Route de Aurice");
-		$address1->setNumber(42);
-
 		$person1 = new Person();
-		$person1->setFirstName("Remi");
-		$person1->setAge(22);
-		$person1->setSize(180);
-		$person1->setAddress($address1);
-
 		$address2 = new Address();
-		$address2->setTown("Cauna");
-		$address2->setStreet("Route de Lourdes");
-		$address2->setNumber(84);
-
 		$person2 = new Person();
-		$person2->setFirstName("Damien");
-		$person2->setAge(19);
-		$person2->setSize(185);
-		$person2->setAddress($address2);
-
 		$family = new Family();
-		$family->setName("Colet");
+
+
+		$person1Method = array();
+		$person2Method = array();
+		$familyMethod = array();
+
+		for($j = 1; $j < 3; $j++){
+			$i = 0;
+			foreach(get_class_methods(${'address'.$j}) as $method)
+				if(strncmp($method, "set", 3) == 0)
+					${'address'.$j}->$method($this->addressData[$j][$i++]);
+
+			$i = 0;
+			foreach(get_class_methods(${'person'.$j}) as $method)
+				if(strncmp($method, "set", 3) == 0 || strncmp($method, "add", 3) == 0) {
+					${'person'.$j.'Method'}[] = substr($method, 3);
+					${'person'.$j}->$method($this->personData[$j-1][$i++]);
+				}
+		}
+
+		$i = 0;
+		foreach(get_class_methods($family) as $method) {
+			if(strncmp($method, "set", 3) == 0){
+				$familyMethod[] = substr($method, 3);
+				$family->$method($this->familyData[0][$i++]);
+			}
+		}
+
+		$person1->setAddress($address1);
+		$person2->setAddress($address2);
 		$family->addPerson($person1);
 		$family->addPerson($person2);
 
@@ -254,61 +348,46 @@ class SerializerTest extends TestCase
 		$entityManager->persist($family);
 		$entityManager->flush();
 
-
-		$address1Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$address1Request = $address1Repository->findOneBy(["town" => "Saint Server"]);
-		$serializerAddress1 = $this->toArray($address1Request);
-
 		$person1Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
-		$person1Request = $person1Repository->findOneBy(["firstName" => "Remi"]);
+		$person1Request = $person1Repository->findOneBy([lcfirst($person1Method[0]) => $this->personData[0][0]]);
 		$serializerPerson1 = $this->toArray($person1Request);
 
-		$this->assertEquals($serializerAddress1['town'], $address1->getTown());
-		$this->assertEquals($serializerAddress1['street'], $address1->getStreet());
-		$this->assertEquals($serializerAddress1['number'], $address1->getNumber());
-
-		$this->assertEquals($serializerPerson1['firstName'], $person1->getFirstName());
-		$this->assertEquals($serializerPerson1['age'], $person1->getAge());
-		$this->assertEquals($serializerPerson1['size'], $person1->getSize());
-
-		$address1InPerson1Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$address1InPerson1Request = $address1InPerson1Repository->findOneBy(["id" => $serializerPerson1['address']]);
-		$this->assertEquals($address1InPerson1Request->getTown(), $address1->getTown());
-
-
-		$address2Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$address2Request = $address2Repository->findOneBy(["town" => "Cauna"]);
-		$serializerAddress2 = $this->toArray($address2Request);
-
 		$person2Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
-		$person2Request = $person2Repository->findOneBy(["firstName" => "Damien"]);
+		$person2Request = $person2Repository->findOneBy([lcfirst($person2Method[0]) => $this->personData[1][0]]);
 		$serializerPerson2 = $this->toArray($person2Request);
 
-		$this->assertEquals($serializerAddress2['town'], $address2->getTown());
-		$this->assertEquals($serializerAddress2['street'], $address2->getStreet());
-		$this->assertEquals($serializerAddress2['number'], $address2->getNumber());
-
-		$this->assertEquals($serializerPerson2['firstName'], $person2->getFirstName());
-		$this->assertEquals($serializerPerson2['age'], $person2->getAge());
-		$this->assertEquals($serializerPerson2['size'], $person2->getSize());
-
-		$address2InPerson2Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$address2InPerson2Request = $address2InPerson2Repository->findOneBy(["id" => $serializerPerson2['address']]);
-		$this->assertEquals($address2InPerson2Request->getTown(), $address2->getTown());
-
 		$familyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Family');
-		$familyRequest = $familyRepository->findOneBy(["name" => "Colet"]);
+		$familyRequest = $familyRepository->findOneBy([lcfirst($familyMethod[0]) => $this->familyData[0]]);
 		$serializerFamily = $this->toArray($familyRequest);
-		$this->assertEquals($serializerFamily['name'], $family->getName());
 
-		$person1InFamilyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
-		$person1InFamilyRequest = $person1InFamilyRepository->findOneBy(["id" => $serializerFamily['persons']['id'][0]]);
-		$this->assertEquals($person1InFamilyRequest->getFirstName(), $person1->getFirstName());
+		$i = 0;
+		foreach ($serializerFamily as $key => $value) {
 
-		$person2InFamilyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
-		$person2InFamilyRequest = $person2InFamilyRepository->findOneBy(["id" => $serializerFamily['persons']['id'][1]]);
-		$this->assertEquals($person2InFamilyRequest->getFirstName(), $person2->getFirstName());
+			if(strcmp($key, "id") == 0) {
+				//Verification qu'il il y a bien l'ID
+				$this->assertEquals($key, "id");
 
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $familyRequest->getId());
+			} else if(strcmp($key, "persons") == 0){
+				//Verification des clé dans le sérializer
+				$this->assertEquals($key, "persons");
+
+				foreach ($value as $key2 => $value2) {
+
+					$this->assertEquals($key2, "id");
+					$j = 1;
+					foreach ($value2 as $value3)
+						$this->assertEquals($value3, ${'person'.$j++.'Request'}->getId());
+				}
+			} else {
+				//Verification des clé dans le sérializer
+				$this->assertEquals($key, lcfirst($familyMethod[$i]));
+
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $family->{"get".$familyMethod[$i++]}());
+			}
+		}
 
 		$cmd = $entityManager->getClassMetadata('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
 		$connection = $entityManager->getConnection();
@@ -357,30 +436,47 @@ class SerializerTest extends TestCase
 	{
 		require("bootstrap.php");
 
+		//Création de notre Entité simple (ici pour l'exemple nous créons une adresse)
 		$address1 = new Address();
-		$address1->setTown("Saint Server");
-		$address1->setStreet("Route de Aurice");
-		$address1->setNumber(42);
-
 		$person1 = new Person();
-		$person1->setFirstName("Remi");
-		$person1->setAge(22);
-		$person1->setSize(180);
-		$person1->setAddress($address1);
-
 		$address2 = new Address();
-		$address2->setTown("Cauna");
-		$address2->setStreet("Route de Lourdes");
-		$address2->setNumber(84);
-
 		$person2 = new Person();
-		$person2->setFirstName("Damien");
-		$person2->setAge(19);
-		$person2->setSize(185);
-		$person2->setAddress($address2);
-
 		$family = new Family();
-		$family->setName("Colet");
+
+		$address1Method = array();
+		$person1Method = array();
+		$address2Method = array();
+		$person2Method = array();
+		$familyMethod = array();
+
+		for($j = 1; $j < 3; $j++){
+			$i = 0;
+			foreach(get_class_methods(${'address'.$j}) as $method) {
+				if(strncmp($method, "set", 3) == 0){
+					${'address'.$j.'Method'}[] = substr($method, 3);
+					${'address'.$j}->$method($this->addressData[$j][$i++]);
+				}
+			}
+
+			$i = 0;
+			foreach(get_class_methods(${'person'.$j}) as $method) {
+				if(strncmp($method, "set", 3) == 0 || strncmp($method, "add", 3) == 0){
+					${'person'.$j.'Method'}[] = substr($method, 3);
+					${'person'.$j}->$method($this->personData[$j-1][$i++]);
+				}
+			}
+		}
+
+		$i = 0;
+		foreach(get_class_methods($family) as $method) {
+			if(strncmp($method, "set", 3) == 0){
+				$familyMethod[] = substr($method, 3);
+				$family->$method($this->familyData[0][$i++]);
+			}
+		}
+
+		$person1->setAddress($address1);
+		$person2->setAddress($address2);
 		$family->addPerson($person1);
 		$family->addPerson($person2);
 
@@ -391,65 +487,87 @@ class SerializerTest extends TestCase
 
 
 		$address1Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$address1Request = $address1Repository->findOneBy(["town" => "Saint Server"]);
-		$serializerAddress1 = $this->toArray($address1Request, 3);
+		$address1Request = $address1Repository->findOneBy([lcfirst($address1Method[0]) => $this->addressData[1][0]]);
+		$serializerAddress1 = $this->toArray($address1Request);
 
 		$person1Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
-		$person1Request = $person1Repository->findOneBy(["firstName" => "Remi"]);
-		$serializerPerson1 = $this->toArray($person1Request, 3);
-
-		$this->assertEquals($serializerAddress1['town'], $address1->getTown());
-		$this->assertEquals($serializerAddress1['street'], $address1->getStreet());
-		$this->assertEquals($serializerAddress1['number'], $address1->getNumber());
-
-		$this->assertEquals($serializerPerson1['firstName'], $person1->getFirstName());
-		$this->assertEquals($serializerPerson1['age'], $person1->getAge());
-		$this->assertEquals($serializerPerson1['size'], $person1->getSize());
-
-		$address1InPerson1Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$address1InPerson1Request = $address1InPerson1Repository->findOneBy(["id" => $serializerPerson1['address']]);
-		$this->assertEquals($address1InPerson1Request->getTown(), $address1->getTown());
-
+		$person1Request = $person1Repository->findOneBy([lcfirst($person1Method[0]) => $this->personData[0][0]]);
+		$serializerPerson1 = $this->toArray($person1Request);
 
 		$address2Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$address2Request = $address2Repository->findOneBy(["town" => "Cauna"]);
-		$serializerAddress2 = $this->toArray($address2Request, 3);
+		$address2Request = $address2Repository->findOneBy([lcfirst($address2Method[0]) => $this->addressData[2][0]]);
+		$serializerAddress2 = $this->toArray($address2Request);
 
 		$person2Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
-		$person2Request = $person2Repository->findOneBy(["firstName" => "Damien"]);
-		$serializerPerson2 = $this->toArray($person2Request, 3);
-
-		$this->assertEquals($serializerAddress2['town'], $address2->getTown());
-		$this->assertEquals($serializerAddress2['street'], $address2->getStreet());
-		$this->assertEquals($serializerAddress2['number'], $address2->getNumber());
-
-		$this->assertEquals($serializerPerson2['firstName'], $person2->getFirstName());
-		$this->assertEquals($serializerPerson2['age'], $person2->getAge());
-		$this->assertEquals($serializerPerson2['size'], $person2->getSize());
-
-		$address2InPerson2Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$address2InPerson2Request = $address2InPerson2Repository->findOneBy(["id" => $serializerPerson2['address']]);
-		$this->assertEquals($address2InPerson2Request->getTown(), $address2->getTown());
+		$person2Request = $person2Repository->findOneBy([lcfirst($person2Method[0]) => $this->personData[1][0]]);
+		$serializerPerson2 = $this->toArray($person2Request);
 
 		$familyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Family');
-		$familyRequest = $familyRepository->findOneBy(["name" => "Colet"]);
+		$familyRequest = $familyRepository->findOneBy([lcfirst($familyMethod[0]) => $this->familyData[0]]);
 		$serializerFamily = $this->toArray($familyRequest, 3);
-		$this->assertEquals($serializerFamily['name'], $family->getName());
 
-		$this->assertEquals($serializerFamily['persons'][0]['firstName'], $person1->getFirstName());
-		$this->assertEquals($serializerFamily['persons'][0]['age'], $person1->getAge());
-		$this->assertEquals($serializerFamily['persons'][0]['size'], $person1->getSize());
-		$this->assertEquals($serializerFamily['persons'][0]['address']['town'], $address1->getTown());
-		$this->assertEquals($serializerFamily['persons'][0]['address']['street'], $address1->getStreet());
-		$this->assertEquals($serializerFamily['persons'][0]['address']['number'], $address1->getNumber());
+		$i = 0;
+		foreach ($serializerFamily as $key => $value) {
 
-		$this->assertEquals($serializerFamily['persons'][1]['firstName'], $person2->getFirstName());
-		$this->assertEquals($serializerFamily['persons'][1]['age'], $person2->getAge());
-		$this->assertEquals($serializerFamily['persons'][1]['size'], $person2->getSize());
-		$this->assertEquals($serializerFamily['persons'][1]['address']['town'], $address2->getTown());
-		$this->assertEquals($serializerFamily['persons'][1]['address']['street'], $address2->getStreet());
-		$this->assertEquals($serializerFamily['persons'][1]['address']['number'], $address2->getNumber());
+			if(strcmp($key, "id") == 0) {
+				//Verification qu'il il y a bien l'ID
+				$this->assertEquals($key, "id");
 
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $familyRequest->getId());
+			} else if(strcmp($key, "persons") == 0){
+				//Verification des clé dans le sérializer
+				$this->assertEquals($key, "persons");
+
+				$j = 1;
+				foreach ($value as $key2 => $value2) {
+					$k = 0;
+					foreach ($value2 as $key3 => $value3) {
+						if(strcmp($key3, "id") == 0) {
+							//Verification qu'il il y a bien l'ID
+							$this->assertEquals($key3, "id");
+
+							//Verification de la donnée dans le sérializer à clé $key3
+							$this->assertEquals($value3, ${'person'.$j.'Request'}->getId());
+						} else if(strcmp($key3, "address") == 0){
+							//Verification des clé dans le sérializer
+							$this->assertEquals($key3, lcfirst(${'person'.$j.'Method'}[$k++]));
+
+							$l = 0;
+							foreach ($value3 as $key4 => $value4) {
+
+								if(strcmp($key4, "id") == 0) {
+									//Verification qu'il il y a bien l'ID
+									$this->assertEquals($key4, "id");
+
+									//Verification de la donnée dans le sérializer à clé $key4
+									$this->assertEquals($value4, ${'person'.$j.'Request'}->getAddress()->getId());
+								} else {
+									//Verification des clé dans le sérializer
+									$this->assertEquals($key4, lcfirst(${'address'.$j.'Method'}[$l]));
+
+									//Verification de la donnée dans le sérializer à clé $key4
+									$this->assertEquals($value4, ${'address'.$j.'Request'}->{"get".${'address'.$j.'Method'}[$l++]}());
+								}
+							}
+						} else {
+							//Verification des clé dans le sérializer
+							$this->assertEquals($key3, lcfirst(${'person'.$j.'Method'}[$k]));
+
+							//Verification de la donnée dans le sérializer à clé $key2
+							$this->assertEquals($value3, ${'person'.$j}->{"get".${'person'.$j.'Method'}[$k++]}());
+						}
+					}
+					$j++;
+				}
+			} else {
+				//Verification des clé dans le sérializer
+				$this->assertEquals($key, lcfirst($familyMethod[$i]));
+
+				//Verification de la donnée dans le sérializer à clé $key
+				$this->assertEquals($value, $family->{"get".$familyMethod[$i++]}());
+			}
+		}
 
 		$cmd = $entityManager->getClassMetadata('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
 		$connection = $entityManager->getConnection();

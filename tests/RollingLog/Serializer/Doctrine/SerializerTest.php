@@ -299,18 +299,156 @@ class SerializerTest extends TestCase
 		$familyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Family');
 		$familyRequest = $familyRepository->findOneBy(["name" => "Colet"]);
 		$serializerFamily = $this->toArray($familyRequest);
-
 		$this->assertEquals($serializerFamily['name'], $family->getName());
 
-		exit(var_dump($serializerFamily));
-
-		$person1InFamilyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$person1InFamilyRequest = $person1InFamilyRepository->findOneBy(["id" => $serializerFamily['address'][1]]);
+		$person1InFamilyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
+		$person1InFamilyRequest = $person1InFamilyRepository->findOneBy(["id" => $serializerFamily['persons']['id'][0]]);
 		$this->assertEquals($person1InFamilyRequest->getFirstName(), $person1->getFirstName());
 
-		$person2InFamilyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
-		$person2InFamilyRequest = $person2InFamilyRepository->findOneBy(["id" => $serializerFamily['address'][2]]);
+		$person2InFamilyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
+		$person2InFamilyRequest = $person2InFamilyRepository->findOneBy(["id" => $serializerFamily['persons']['id'][1]]);
 		$this->assertEquals($person2InFamilyRequest->getFirstName(), $person2->getFirstName());
+
+
+		$cmd = $entityManager->getClassMetadata('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
+		$connection = $entityManager->getConnection();
+		$connection->beginTransaction();
+
+		try {
+		    $connection->query('SET FOREIGN_KEY_CHECKS=0');
+		    $connection->query('DELETE FROM '.$cmd->getTableName());
+
+		    $connection->query('SET FOREIGN_KEY_CHECKS=1');
+		    $connection->commit();
+		} catch (\Exception $e) {
+		    $connection->rollback();
+		}
+
+		$cmd = $entityManager->getClassMetadata('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
+		$connection = $entityManager->getConnection();
+		$connection->beginTransaction();
+
+		try {
+		    $connection->query('SET FOREIGN_KEY_CHECKS=0');
+		    $connection->query('DELETE FROM '.$cmd->getTableName());
+
+		    $connection->query('SET FOREIGN_KEY_CHECKS=1');
+		    $connection->commit();
+		} catch (\Exception $e) {
+		    $connection->rollback();
+		}
+
+		$cmd = $entityManager->getClassMetadata('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Family');
+		$connection = $entityManager->getConnection();
+		$connection->beginTransaction();
+
+		try {
+		    $connection->query('SET FOREIGN_KEY_CHECKS=0');
+		    $connection->query('DELETE FROM '.$cmd->getTableName());
+
+		    $connection->query('SET FOREIGN_KEY_CHECKS=1');
+		    $connection->commit();
+		} catch (\Exception $e) {
+		    $connection->rollback();
+		}
+	}
+
+	public function testEntityWithManyToOneWithChangeDepth()
+	{
+		require("bootstrap.php");
+
+		$address1 = new Address();
+		$address1->setTown("Saint Server");
+		$address1->setStreet("Route de Aurice");
+		$address1->setNumber(42);
+
+		$person1 = new Person();
+		$person1->setFirstName("Remi");
+		$person1->setAge(22);
+		$person1->setSize(180);
+		$person1->setAddress($address1);
+
+		$address2 = new Address();
+		$address2->setTown("Cauna");
+		$address2->setStreet("Route de Lourdes");
+		$address2->setNumber(84);
+
+		$person2 = new Person();
+		$person2->setFirstName("Damien");
+		$person2->setAge(19);
+		$person2->setSize(185);
+		$person2->setAddress($address2);
+
+		$family = new Family();
+		$family->setName("Colet");
+		$family->addPerson($person1);
+		$family->addPerson($person2);
+
+		$entityManager->persist($address1);
+		$entityManager->persist($address2);
+		$entityManager->persist($family);
+		$entityManager->flush();
+
+
+		$address1Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
+		$address1Request = $address1Repository->findOneBy(["town" => "Saint Server"]);
+		$serializerAddress1 = $this->toArray($address1Request, 3);
+
+		$person1Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
+		$person1Request = $person1Repository->findOneBy(["firstName" => "Remi"]);
+		$serializerPerson1 = $this->toArray($person1Request, 3);
+
+		$this->assertEquals($serializerAddress1['town'], $address1->getTown());
+		$this->assertEquals($serializerAddress1['street'], $address1->getStreet());
+		$this->assertEquals($serializerAddress1['number'], $address1->getNumber());
+
+		$this->assertEquals($serializerPerson1['firstName'], $person1->getFirstName());
+		$this->assertEquals($serializerPerson1['age'], $person1->getAge());
+		$this->assertEquals($serializerPerson1['size'], $person1->getSize());
+
+		$address1InPerson1Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
+		$address1InPerson1Request = $address1InPerson1Repository->findOneBy(["id" => $serializerPerson1['address']]);
+		$this->assertEquals($address1InPerson1Request->getTown(), $address1->getTown());
+
+
+		$address2Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
+		$address2Request = $address2Repository->findOneBy(["town" => "Cauna"]);
+		$serializerAddress2 = $this->toArray($address2Request, 3);
+
+		$person2Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person');
+		$person2Request = $person2Repository->findOneBy(["firstName" => "Damien"]);
+		$serializerPerson2 = $this->toArray($person2Request, 3);
+
+		$this->assertEquals($serializerAddress2['town'], $address2->getTown());
+		$this->assertEquals($serializerAddress2['street'], $address2->getStreet());
+		$this->assertEquals($serializerAddress2['number'], $address2->getNumber());
+
+		$this->assertEquals($serializerPerson2['firstName'], $person2->getFirstName());
+		$this->assertEquals($serializerPerson2['age'], $person2->getAge());
+		$this->assertEquals($serializerPerson2['size'], $person2->getSize());
+
+		$address2InPerson2Repository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');
+		$address2InPerson2Request = $address2InPerson2Repository->findOneBy(["id" => $serializerPerson2['address']]);
+		$this->assertEquals($address2InPerson2Request->getTown(), $address2->getTown());
+
+		$familyRepository = $entityManager->getRepository('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Family');
+		$familyRequest = $familyRepository->findOneBy(["name" => "Colet"]);
+		$serializerFamily = $this->toArray($familyRequest, 3);
+		$this->assertEquals($serializerFamily['name'], $family->getName());
+
+		$this->assertEquals($serializerFamily['persons'][0]['firstName'], $person1->getFirstName());
+		$this->assertEquals($serializerFamily['persons'][0]['age'], $person1->getAge());
+		$this->assertEquals($serializerFamily['persons'][0]['size'], $person1->getSize());
+		$this->assertEquals($serializerFamily['persons'][0]['address']['town'], $address1->getTown());
+		$this->assertEquals($serializerFamily['persons'][0]['address']['street'], $address1->getStreet());
+		$this->assertEquals($serializerFamily['persons'][0]['address']['number'], $address1->getNumber());
+
+		$this->assertEquals($serializerFamily['persons'][1]['firstName'], $person2->getFirstName());
+		$this->assertEquals($serializerFamily['persons'][1]['age'], $person2->getAge());
+		$this->assertEquals($serializerFamily['persons'][1]['size'], $person2->getSize());
+		$this->assertEquals($serializerFamily['persons'][1]['address']['town'], $address2->getTown());
+		$this->assertEquals($serializerFamily['persons'][1]['address']['street'], $address2->getStreet());
+		$this->assertEquals($serializerFamily['persons'][1]['address']['number'], $address2->getNumber());
 
 
 		$cmd = $entityManager->getClassMetadata('Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address');

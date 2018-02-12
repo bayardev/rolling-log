@@ -21,7 +21,7 @@ $ composer require bayardev/rolling-log
 
 ### Requirements
 
-- Monolog works with PHP 5.6 or above.
+- Rolling-Log works with PHP 5.6 or above.
 
 ### Submitting bugs and feature requests
 

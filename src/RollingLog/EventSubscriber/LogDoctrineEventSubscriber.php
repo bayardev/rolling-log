@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManager;
 use Bayard\RollingLog\Exception\BayardRollingLogException;
 use Bayard\RollingLog\Serializer\DoctrineEntitySerializerInterface;
 use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
+use Psr\Log\LoggerInterface;
 
 class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventSubscriber
 {

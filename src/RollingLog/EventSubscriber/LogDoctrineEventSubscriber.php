@@ -7,11 +7,15 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\EntityManager;
 use Bayard\RollingLog\Exception\BayardRollingLogException;
+use Bayard\RollingLog\Serializer\DoctrineEntitySerializerInterface;
 use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
 
 class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventSubscriber
 {
-    use DoctrineEntitySerializer;
+    /**
+     * @var SerializerInterface
+     */
+    protected $serializer;
 
     protected $eventsMessages = [
         Events::preRemove => "Preparing to Remove",
@@ -19,6 +23,12 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
         Events::postPersist => "Created",
         Events::postUpdate => "Updated"
     ];
+
+    function __construct(LoggerInterface $logger)
+    {
+        parent::__construct();
+        $this->setSerializer();
+    }
 
     public function getSubscribedEvents()
     {
@@ -30,12 +40,17 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
         return $args;
     }
 
-    // public function setSerializer(ArrayTransformerInterface $serializer)
-    // {
-    //     $this->serializer = (null === $serializer) ?
-    //         $serializer = new DoctrineEntitySerializer() :
-    //         $serializer;
-    // }
+    public function setSerializer(DoctrineEntitySerializerInterface $serializer = null)
+    {
+        $this->serializer = (null === $serializer) ?
+            $serializer = new DoctrineEntitySerializer() :
+            $serializer;
+    }
+
+    protected function serializeObject($object)
+    {
+        return $this->serializer->toArray($object);
+    }
 
     public function __call($name, $args)
     {
@@ -45,7 +60,7 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
 
         $eargs = $this->getLifecycleEventArgs($args[0]);
         $entity = $eargs->getObject();
-        $entityName = $this->getSimpleClassName(get_class($entity));
+        $entityName = $this->serializer->getSimpleClassName(get_class($entity));
         $entityManager = $eargs->getObjectManager();
         $entityManager->getUnitOfWork()->initializeObject($entity);
 
@@ -72,7 +87,7 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
         $removing_values = [];
         foreach ($original_data as $attr => $value) {
             if (is_object($value)) {
-                $removing_values[$attr] = $this->objectAsName($value);
+                $removing_values[$attr] = $this->serializer->objectAsName($value);
             } else {
                 $removing_values[$attr] = $value;
             }
@@ -83,13 +98,13 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
 
     public function getContextForPostRemove(EntityManager $entityManager, $entity)
     {
-        return $this->toArray($entity);
+        return $this->serializeObject($entity);
 
     }
 
     public function getContextForPostPersist(EntityManager $entityManager, $entity)
     {
-        return $this->toArray($entity);
+        return $this->serializeObject($entity);
     }
 
     public function getContextForPostUpdate(EntityManager $entityManager, $entity)
@@ -99,7 +114,7 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
         foreach ($change_set as $attr => $values) {
             foreach ($values as $i => $value) {
                 if (is_object($value)) {
-                    $change_set[$attr][$i] = $this->objectAsName($value);
+                    $change_set[$attr][$i] = $this->serializer->objectAsName($value);
                 }
             }
         }

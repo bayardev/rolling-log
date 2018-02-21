@@ -24,7 +24,7 @@
         "psr-4": {"Bayard\\RollingLog\\": "src/RollingLog"}
     },
     "autoload-dev": {
-        "psr-4": {"Bayard\\RollingLog\\Tests\\": "tests/RollingLog"}
+        "psr-4": {"Bayard\\RollingLog\\Tests\\": "tests.nogit/RollingLog"}
     },
     "minimum-stability": "dev",
     "extra": {

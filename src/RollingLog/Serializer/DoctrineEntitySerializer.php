@@ -2,15 +2,14 @@
 
 namespace Bayard\RollingLog\Serializer;
 
-use Bayard\RollingLog\Serializer\ArrayzerInterface;
+use Bayard\RollingLog\Serializer\DoctrineEntitySerializerInterface;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\PersistentCollection;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-trait DoctrineEntitySerializer
+class DoctrineEntitySerializer implements DoctrineEntitySerializerInterface
 {
-
     /**
      * Serializes our Doctrine Entities
      *
@@ -90,7 +89,7 @@ trait DoctrineEntitySerializer
      * @param  String $classname doctrine class name
      * @return String            Simple class name
      */
-    protected function getSimpleClassName($classname)
+    public function getSimpleClassName($classname)
     {
         if ($pos = strrpos($classname, '\\'))
             return substr($classname, $pos + 1);

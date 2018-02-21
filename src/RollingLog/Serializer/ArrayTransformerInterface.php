@@ -2,7 +2,7 @@
 
 namespace Bayard\RollingLog\Serializer;
 
-interface ArrayzerInterface
+interface ArrayTransformerInterface
 {
     /**
      * Serializes an Object to Array

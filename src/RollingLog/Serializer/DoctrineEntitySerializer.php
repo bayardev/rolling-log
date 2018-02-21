@@ -2,25 +2,14 @@
 
 namespace Bayard\RollingLog\Serializer;
 
-use Bayard\RollingLog\Serializer\ArrayzerInterface;
+use Bayard\RollingLog\Serializer\DoctrineEntitySerializerInterface;
 
-class DoctrineEntitySerializer implements ArrayzerInterface
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\PersistentCollection;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+
+class DoctrineEntitySerializer implements DoctrineEntitySerializerInterface
 {
-
-    /**
-     * Converts the Doctrine Entity into a JSON Representation
-     *
-     * @param object $object The Object (Typically a Doctrine Entity) to convert to an array
-     * @param integer $depth The Depth of the object graph to pursue
-     * @param array $whitelist List of entity=>array(parameters) to convert
-     * @param array $blacklist List of entity=>array(parameters) to skip
-     * @return string
-     */
-    public function json_encode($object, $depth=1, $whitelist=array(), $blacklist=array())
-    {
-        return json_encode($this->toArray($object, $depth, $whitelist, $blacklist));
-    }
-
     /**
      * Serializes our Doctrine Entities
      *
@@ -36,113 +25,203 @@ class DoctrineEntitySerializer implements ArrayzerInterface
      */
     public function toArray($object, $depth = 1,$whitelist=array(), $blacklist=array())
     {
-
         // If we drop below depth 0, just return NULL
         if ($depth < 0){
             return NULL;
         }
 
-        // If this is an array, we need to loop through the values
-        if (is_array($object)){
-            // Somthing to Hold Return Values
-            $anArray = array();
+        $anArray = array();
 
-            // The Loop
-            foreach ($object as $value){
-                // Store the results
-                $anArray[] = $this->arrayizor($value, $depth, $whitelist, $blacklist);
+        foreach(get_class_methods($object) as $method)
+        {
+            if(strncmp($method, "get", 3) == 0)
+            {
+                $value = $object->$method();
+                if($value !== null)
+                {
+                    $attr = lcfirst(substr($method, 3));
+                    if(is_object($value)) 
+                    {
+                        if($depth > 1)
+                        {
+                            switch (true) 
+                            {
+                                case ($value instanceof PersistentCollection):
+                                    foreach ($value->getValues() as $tmpValue) 
+                                    {
+                                        $anArray[$attr][] = $this->toArray($tmpValue, $depth-1, $whitelist, $blacklist);
+                                    }
+                                    break;
+                                case ($value instanceof \DateTime):
+                                    $anArray[$attr] = $value->format(\DateTime::ATOM);
+                                    break;
+                                case ($value instanceof UploadedFile):
+                                    break;
+                                default:
+                                    $anArray[$attr] = $this->toArray($value, $depth-1, $whitelist, $blacklist);
+                                    break;
+                            }
+                        }
+                        else{
+                            $anArray[$attr] = $this->objectAsName($value);
+                        }
+                    }
+                    else
+                    {
+                        $anArray[$attr] = $value;
+                    }
+                }
             }
-            // Return it
-            return $anArray;
-        }else{
-            // Just return it
-            return $this->arrayizor($object, $depth, $whitelist, $blacklist);
         }
+        // exit();
+        if(empty($whitelist))
+           if (empty($blacklist))
+                return $anArray;
+            else
+                return $this->blackListing($blacklist, $anArray);
+        else
+            return $this->whiteListing($whitelist, $anArray);
+
     }
 
     /**
-     * This does all the heavy lifting of actually converting to an array
-     *
-     * @param object $object The Object (Typically a Doctrine Entity) to convert to an array
-     * @param integer $depth The Depth of the object graph to pursue
-     * @param array $whitelist List of entity=>array(parameters) to convert
-     * @param array $blacklist List of entity=>array(parameters) to skip
-     * @return NULL|Array
+     * recovers a simple class name in doctrine class name
+     * @param  String $classname doctrine class name
+     * @return String            Simple class name
      */
-    protected function arrayizor($anObject, $depth, $whitelist=array(), $blacklist=array())
+    public function getSimpleClassName($classname)
     {
-        // Determine the next depth to use
-        $nextDepth = $depth - 1;
+        if ($pos = strrpos($classname, '\\'))
+            return substr($classname, $pos + 1);
 
-        // Lets get our Class Name
-        // @TODO: Making some assumptions that only objects get passed in, need error checking
-        $clazzName = get_class($anObject);
+        return $pos;
+    }
 
-        // Now get our reflection class for this class name
-        $reflectionClass = new \ReflectionClass($clazzName);
-
-        // Then grap the class properites
-        $clazzProps = $reflectionClass->getProperties();
-
-        if (is_a($anObject, 'Doctrine\ORM\Proxy\Proxy')){
-            $parent = $reflectionClass->getParentClass();
-            $clazzName = $parent->getName();
-            $clazzProps = $parent->getProperties();
+    /**
+     * function take of blacklist elements of the array
+     * @param  Array $blacklist  elements to take of
+     * @param  Array $array      traeted array
+     * @return Array             Array whithout blacklist 
+     */
+    protected function blackListing($blacklist, $array)
+    {
+        $tmp = array();
+        foreach ($array as $key => $value) {
+            if(!in_array($key, $blacklist))
+                $tmp[$key] = $value;
         }
-        // A new array to hold things for us
-        $anArray = array();
+        return $tmp;
+    }
 
-        // Lets loop through those class properties now
-        foreach ($clazzProps as $prop){
+    /**
+     * function take of the element are not in the array
+     * @param  Array $whitelist  elements to keep
+     * @param  Array $array      traeted array
+     * @return Array             Array with only whitelist
+     */
+    protected function whiteListing($whitelist, $array)
+    {
+        $tmp = array();
+        foreach ($array as $key => $value) {
+            if(in_array($key, $whitelist))
+                $tmp[$key] = $value;
+        }
+        return $tmp;
+    }
 
-            // If a Whitelist exists
-            if (@count($whitelist[$clazzName]) > 0){
-                // And this class property is not in it
-                if (! @in_array($prop->name, $whitelist[$clazzName])){
-                    // lets skip it.
-                    continue;
-                }
-            // Otherwise, if a blacklist exists
-            }elseif (@count($blacklist[$clazzName] > 0)){
-                // And this class property is in it
-                if (@in_array($prop->name, $blacklist[$clazzName])){
-                    // lets skip it.
-                    continue;
-                }
-            }
+    /**
+     * Function research a first information of object with one his exist method, else serialize object
+     * @param  Object $object       Object where search method
+     * @return String|Array         First information or serialize object
+     */
+    public function objectAsName($object)
+    {
+        switch (true) {
+            case method_exists($object, '__toString'):
+                $result = $object->__toString();
+                break;
+            case method_exists($object, 'getId'):
+                $result = $object->getId();
+                break;
+            case ($object instanceof PersistentCollection):
+                $result = $this->persistentCollectionToArrayAsId($object);
+                break;
+            case $method_like_name = $this->methodLikeGetNameExists($object):
+                $result = $object->$method_like_name();
+                break;
+            case method_exists($object, 'getSlug'):
+                $result = $object->getSlug();
+                break;
+            case method_exists($object, 'getLabel'):
+                $result = $object->getLabel();
+                break;
+            case method_exists($object, 'getAlt'):
+                $result = $object->getAlt();
+                break;
+            case method_exists($object, 'geturl'):
+                $result = $object->geturl();
+                break;
+            case ($object instanceof \DateTime):
+                $result = $object->format(\DateTime::ATOM);
+                break;
+            default:
+                $result = $this->toArray($object);
+                break;
+        }
+        return $result;
+    }
 
-            // We know the property, lets craft a getProperty method
-            $method_name = 'get' . ucfirst($prop->name) ;
-            // And check to see that it exists for this object
-            if (! method_exists($anObject, $method_name)){
-                continue;
-            }
-            // It did, so lets call it!
-            $aValue = $anObject->$method_name();
-            // If it is an object, we need to handle that
-            if (is_object($aValue)){
-                // If it is a datetime, lets make it a string
-                if (get_class($aValue) === 'DateTime'){
-                    $anArray[$prop->name] = $aValue->format('Y-m-d H:i:s');
-                // If it is a Doctrine Collection, we need to loop through it
-                }elseif(get_class($aValue) ==='Doctrine\ORM\PersistentCollection'){
-                    $collect = array();
-                    foreach ($aValue as $val){
-                        $collect[] = $this->toArray($val, $nextDepth, $whitelist, $blacklist);
-                    }
-                    $anArray[$prop->name] = $collect;
 
-                // Otherwise, we can simply make it an array
-                }else{
-                    $anArray[$prop->name] = $this->toArray($aValue, $nextDepth, $whitelist, $blacklist);
-                }
-            // Otherwise, we just use the base value
-            }else{
+    /**
+     * Function research method to return a name of class
+     * @param  Object $object       Object where search method name
+     * @return String|false         method to return a name of class or false
+     */
+    protected function methodLikeGetNameExists($object)
+    {
+        $tab_method = array();
+        $class_methods = get_class_methods($object);
+        foreach ($class_methods as $method_name)
+            if(strncmp($method_name, "get", 3) == 0)
+                if (strpos($method_name, 'Name') !== false || strpos($method_name, 'name') !== false)
+                    $tab_method[] = $method_name;
 
-                $anArray[$prop->name] = $val;
+        //voir les username/firstName/appName/fileName
+        if(count($tab_method) !== 0)
+        {
+            switch (true) {
+                case in_array('getName', $tab_method):
+                    return "getName";
+                case in_array('getUserName', $tab_method):
+                    return "getUserName";
+                case in_array('getUsername', $tab_method):
+                    return "getUsername";
+                case in_array('getFirstName', $tab_method):
+                    return "getFirstName";
+                case in_array('getFileName', $tab_method):
+                    return "getFileName";
+                default:
+                    return $tab_method[0];
             }
         }
-        // All done, send it back!
-        return $anArray;
+        return false;
+    }
+
+
+    /**
+     * [persistentCollectionToArrayAsId description]
+     * @param  PersistentCollection $object [description]
+     * @return [type]                       [description]
+     */
+    protected function persistentCollectionToArrayAsId(PersistentCollection $object)
+    {
+        $tmp = array();
+        foreach ($object->getValues() as $object) {
+            if(method_exists($object, "getId"))
+                $tmp["id"][] = $object->getId();
+            else
+                $tmp[] = $this->objectAsName($value);
+        }
+        return $tmp;
     }
 }

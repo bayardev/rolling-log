@@ -27,7 +27,7 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
 
     function __construct(LoggerInterface $logger)
     {
-        parent::__construct();
+        parent::__construct($logger);
         $this->setSerializer();
     }
 

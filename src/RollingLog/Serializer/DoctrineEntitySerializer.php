@@ -37,39 +37,36 @@ class DoctrineEntitySerializer implements DoctrineEntitySerializerInterface
             if(strncmp($method, "get", 3) == 0)
             {
                 $value = $object->$method();
-                if($value !== null)
+                $attr = lcfirst(substr($method, 3));
+                if(is_object($value)) 
                 {
-                    $attr = lcfirst(substr($method, 3));
-                    if(is_object($value)) 
+                    if($depth > 1)
                     {
-                        if($depth > 1)
+                        switch (true) 
                         {
-                            switch (true) 
-                            {
-                                case ($value instanceof PersistentCollection):
-                                    foreach ($value->getValues() as $tmpValue) 
-                                    {
-                                        $anArray[$attr][] = $this->toArray($tmpValue, $depth-1, $whitelist, $blacklist);
-                                    }
-                                    break;
-                                case ($value instanceof \DateTime):
-                                    $anArray[$attr] = $value->format(\DateTime::ATOM);
-                                    break;
-                                case ($value instanceof UploadedFile):
-                                    break;
-                                default:
-                                    $anArray[$attr] = $this->toArray($value, $depth-1, $whitelist, $blacklist);
-                                    break;
-                            }
-                        }
-                        else{
-                            $anArray[$attr] = $this->objectAsName($value);
+                            case ($value instanceof PersistentCollection):
+                                foreach ($value->getValues() as $tmpValue) 
+                                {
+                                    $anArray[$attr][] = $this->toArray($tmpValue, $depth-1, $whitelist, $blacklist);
+                                }
+                                break;
+                            case ($value instanceof \DateTime):
+                                $anArray[$attr] = $value->format(\DateTime::ATOM);
+                                break;
+                            case ($value instanceof UploadedFile):
+                                break;
+                            default:
+                                $anArray[$attr] = $this->toArray($value, $depth-1, $whitelist, $blacklist);
+                                break;
                         }
                     }
-                    else
-                    {
-                        $anArray[$attr] = $value;
+                    else{
+                        $anArray[$attr] = $this->objectAsName($value);
                     }
+                }
+                else
+                {
+                    $anArray[$attr] = $value;
                 }
             }
         }

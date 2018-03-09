@@ -2,15 +2,15 @@
 
 namespace Bayard\RollingLog\EventSubscriber\Symfony;
 
-use Psr\Log\LoggerInterface;
+//use Psr\Log\LoggerInterface;
 use Bayard\RollingLog\EventSubscriber\AbstractLogSubscriber;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
-use Symfony\Component\HttpKernel\HttpKernelInterface;
-use Bayard\RollingLog\Sanitizer\ContextSanitizer;
-use Bayard\RollingLog\Sanitizer\ArraySanitizerInterface;
+// use Bayard\RollingLog\Sanitizer\ContextSanitizer;
+// use Bayard\RollingLog\Sanitizer\ArraySanitizerInterface;
 
 class HttpKernelEventSubscriber extends AbstractLogSubscriber implements EventSubscriberInterface
 {
@@ -27,30 +27,11 @@ class HttpKernelEventSubscriber extends AbstractLogSubscriber implements EventSu
         HttpKernelInterface::SUB_REQUEST => 'SUB_REQUEST',
     ];
 
-    function __construct(LoggerInterface $logger)
-    {
-        parent::__construct($logger);
-        $this->setSanitizer();
-    }
-
-    public function setSanitizer(ArraySanitizerInterface $sanitizer = null)
-    {
-        $this->sanitizer = (null === $sanitizer) ?
-            $sanitizer = $this->getDefaultSanitizer() :
-            $sanitizer;
-    }
-
-    protected function getDefaultSanitizer()
-    {
-        return new ContextSanitizer();
-    }
-
     public static function getSubscribedEvents()
     {
         // return the subscribed events, their methods and priorities
         return array(
-           KernelEvents::CONTROLLER => 'logController',
-           KernelEvents::REQUEST => 'logRequest',
+            KernelEvents::REQUEST => 'logRequest'
         );
     }
 
@@ -62,22 +43,15 @@ class HttpKernelEventSubscriber extends AbstractLogSubscriber implements EventSu
             'requestType' => static::$requestType[$event->getRequestType()]
         ]);
 
-        $context = $this->sanitizer->sanitize($context);
-
         $message = "Incoming Request";
 
         $this->logEvent($message, $context);
     }
 
-    public function logController(FilterControllerEvent $event)
-    {
-        // ...
-    }
-
     protected function serializeRequest($request)
     {
         $result = [
-            'uri' => $request-> getPathInfo(),
+            'url' => $request-> getPathInfo(),
             'method' => $request->getMethod()
         ];
 

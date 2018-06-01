@@ -1,5 +1,11 @@
 # RollingLog - Smart Logger based on Events
 
+[![Latest Stable Version](https://poser.pugx.org/bayardev/rolling-log/v/stable)](https://packagist.org/packages/bayardev/rolling-log)
+[![Latest Unstable Version](https://poser.pugx.org/bayardev/rolling-log/v/unstable)](https://packagist.org/packages/bayardev/rolling-log#dev-master)
+[![PHP required version](https://img.shields.io/badge/php->=5.6-8892BF.svg)](https://github.com/bayardev/rolling-log/blob/master/composer.json)
+[![License](https://poser.pugx.org/bayardev/rolling-log/license)](https://github.com/bayardev/rolling-log/blob/master/LICENCE)
+[![Total Downloads](https://poser.pugx.org/bayardev/rolling-log/downloads)](https://packagist.org/packages/bayardev/rolling-log)
+
 RollingLog allow you to automatically log messages based on events.
 
 

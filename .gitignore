@@ -4,7 +4,6 @@ phpunit
 cache/*
 /vendor/
 .htaccess
-composer.lock
 *.nogit*
 .idea*
 *.old*

@@ -6,7 +6,6 @@ use Bayard\RollingLog\Serializer\DoctrineEntitySerializer;
 use PHPUnit\Framework\TestCase;
 use Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Person;
 use Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Family;
-use Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\FamilyTest;
 use Bayard\RollingLog\Tests\Serializer\Doctrine\Entities\Address;
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\ORM\EntityManager;
@@ -33,20 +32,20 @@ class DoctrineEntitySerializerTest extends TestCase
 
 	public function addressProvider(){
 		return array(
-			array("Aurice", "Route de campagne", 70), 
-			array("Saint Server", "Route de Aurice", 42), 
+			array("Aurice", "Route de campagne", 70),
+			array("Saint Server", "Route de Aurice", 42),
 			array("Cauna", "Route de Lourdes", 84),
-			array("Montrouge", null, 62), 
+			array("Montrouge", null, 62),
 			array(true, 1024, "test"),
 		);
 	}
 
 	public function personProvider(){
 		return array(
-			array("Remi", 22, 180, null, 
+			array("Remi", 22, 180, null,
 				array("Aurice", "Route de campagne", 70)
-			), 
-			array("Damien", 19, 185, null, 
+			),
+			array("Damien", 19, 185, null,
 				array("Saint Server", "Route de Aurice", 42)
 			)
 		);
@@ -56,16 +55,16 @@ class DoctrineEntitySerializerTest extends TestCase
 		return array(
 			array('Colet',
 				array(
-					array("Remi", 22, 180, null, 
+					array("Remi", 22, 180, null,
 						array("Aurice", "Route de campagne", 70)
-					), 
-					array("Damien", 19, 185, null, 
+					),
+					array("Damien", 19, 185, null,
 						array("Saint Server", "Route de Aurice", 42)
 					)
 				)
 			)
 		);
-	} 
+	}
 
 	/**
 	 * @dataProvider addressProvider
@@ -133,7 +132,7 @@ class DoctrineEntitySerializerTest extends TestCase
 	 * @dataProvider familyProvider
 	 */
 	public function testEntityWithManyToOne($name, $persons){
-		$family = new FamilyTest();
+		$family = new Family();
 		$family->setName($name);
 
 		$person1 = new Person();

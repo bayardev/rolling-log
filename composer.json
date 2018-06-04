@@ -37,9 +37,9 @@
         "psr-4": {"Bayard\\RollingLog\\": "src/RollingLog"}
     },
     "autoload-dev": {
-        "psr-4": {"Bayard\\RollingLog\\Tests\\": "tests.nogit/RollingLog"}
+        "psr-4": {"Bayard\\RollingLog\\Tests\\": "tests/RollingLog"}
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "extra": {
         "branch-alias": {
             "dev-master": "0.x-dev"

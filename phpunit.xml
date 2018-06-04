@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/5.7/phpunit.xsd"
+        bootstrap="vendor/autoload.php"
+        colors="true"
+        backupGlobals="false"
+        verbose="true"
+        beStrictAboutTestsThatDoNotTestAnything="true"
+        beStrictAboutTestSize="true"
+        timeoutForSmallTests="2"
+>
+    <testsuites>
+        <testsuite name="Project Test Suite">
+            <directory>tests</directory>
+            <exclude>tests/RollingLog/Serializer/Doctrine/Entities</exclude>
+        </testsuite>
+
+    </testsuites>
+
+    <php>
+        <const name="PHPUNIT_TESTSUITE" value="true"/>
+    </php>
+</phpunit>

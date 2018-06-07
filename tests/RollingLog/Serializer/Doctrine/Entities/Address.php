@@ -8,22 +8,24 @@ use Doctrine\ORM\Mapping as ORM;
  * Adress
  * @Entity @Table(name="address")
  */
-class Address{	
-	/**
+class Address
+{
+    
+    /**
      * @var int
      *
      * @Column(name="id", type="integer")
      * @Id
      * @GeneratedValue(strategy="AUTO")
      */
-	private $id;
+    private $id;
 
-	/**
+    /**
      * @var string
      *
      * @Column(name="town", type="string", length=255, unique=true)
      */
-	private $town;
+    private $town;
 
     /**
      * @var string

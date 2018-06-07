@@ -40,6 +40,4 @@ abstract class AbstractLogSubscriber
 
         $this->logger->log($level, $message, $context);
     }
-
-
 }

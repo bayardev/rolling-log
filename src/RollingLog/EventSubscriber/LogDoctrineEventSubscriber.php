@@ -25,7 +25,7 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
         Events::postUpdate => "Updated"
     ];
 
-    function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger)
     {
         parent::__construct($logger);
         $this->setSerializer();
@@ -100,7 +100,6 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
     public function getContextForPostRemove(EntityManager $entityManager, $entity)
     {
         return $this->serializeObject($entity);
-
     }
 
     public function getContextForPostPersist(EntityManager $entityManager, $entity)
@@ -122,7 +121,4 @@ class LogDoctrineEventSubscriber extends AbstractLogSubscriber implements EventS
 
         return $change_set;
     }
-
-
-
 }

@@ -16,7 +16,7 @@ class ContextSanitizer implements ArraySanitizerInterface
      * @param  Array $array [description]
      * @return Array         [description]
      */
-    public function sanitize(Array $array)
+    public function sanitize(array $array)
     {
         foreach ($array as $key => $value) {
             if (empty($value)) {
@@ -34,7 +34,7 @@ class ContextSanitizer implements ArraySanitizerInterface
      * @param  Array  $array [description]
      * @return Array        [description]
      */
-    public function sanitizePassword(Array $array)
+    public function sanitizePassword(array $array)
     {
         foreach ($array as $key => $item) {
             if (is_array($item)) {

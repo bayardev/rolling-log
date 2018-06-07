@@ -9,6 +9,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
+
 // use Bayard\RollingLog\Sanitizer\ContextSanitizer;
 // use Bayard\RollingLog\Sanitizer\ArraySanitizerInterface;
 
@@ -81,5 +82,4 @@ class HttpKernelEventSubscriber extends AbstractLogSubscriber implements EventSu
 
         return $result;
     }
-
 }

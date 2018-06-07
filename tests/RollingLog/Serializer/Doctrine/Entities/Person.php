@@ -10,36 +10,36 @@ use Doctrine\ORM\Mapping as ORM;
  * @Entity @Table(name="person")
  */
 class Person
-{	
-	/**
+{
+    /**
      * @var int
      *
      * @Column(name="id", type="integer")
      * @Id
      * @GeneratedValue(strategy="AUTO")
      */
-	private $id;
+    private $id;
 
-	/**
+    /**
      * @var string
      *
      * @Column(name="firstName", type="string", length=255, unique=true)
      */
-	private $firstName;
+    private $firstName;
 
-	/**
+    /**
      * @var int
      *
      * @Column(name="age", type="integer")
      */
-	private $age;
+    private $age;
 
-	/**
+    /**
      * @var int
      *
      * @Column(name="size", type="integer")
      */
-	private $size;
+    private $size;
 
     /**
     * @ManyToOne(targetEntity="Family", inversedBy="persons")

@@ -13,4 +13,5 @@ before_script: composer install
 script: phpunit --configuration phpunit.xml
 
 notifications:
-  email: "remi.colet@icloud.com"
+  slack:
+    on_success: always

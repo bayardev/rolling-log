@@ -10,3 +10,4 @@ cache/*
 *.php~
 *.lnk
 docker-compose.yml
+composer.lock

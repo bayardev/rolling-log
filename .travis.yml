@@ -13,5 +13,4 @@ before_script: composer install
 script: phpunit --configuration phpunit.xml
 
 notifications:
-  slack:
-    on_success: always
+  slack: bayard-web:VU1TQuHRTQAJj1PSFGx79S4J

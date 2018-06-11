@@ -14,10 +14,19 @@
             <directory>tests</directory>
             <exclude>tests/RollingLog/Serializer/Doctrine/Entities</exclude>
         </testsuite>
-
     </testsuites>
 
     <php>
         <const name="PHPUNIT_TESTSUITE" value="true"/>
     </php>
+
+    <filter>
+      <whitelist processUncoveredFilesFromWhitelist="true">
+        <directory suffix=".php">./src/RollingLog</directory>
+        <exclude>
+          <directory suffix=".php">./src/RollingLog/Exception</directory>
+        </exclude>
+      </whitelist>
+    </filter>
+
 </phpunit>

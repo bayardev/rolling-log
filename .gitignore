@@ -11,3 +11,4 @@ cache/*
 *.lnk
 docker-compose.yml
 composer.lock
+coverage.xml

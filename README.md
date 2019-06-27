@@ -9,6 +9,10 @@
 
 RollingLog allow you to automatically log messages based on events.
 
+ <a href="https://francescocirillo.com/pages/anti-if-campaign">
+   <img height="60" width="120" src="http://cdn.shopify.com/s/files/1/0257/1675/t/147/assets/banner_ive-joined.gif" alt="I have joined Anti-IF Campaign">
+ </a>
+
 
 ## Installation
 
